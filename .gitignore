@@ -1,0 +1,6 @@
+result/
+__pycache__/
+environment.__pycache__/
+postprocessing.__pycache__/
+visualization.__pycache__/
+*.pyc
