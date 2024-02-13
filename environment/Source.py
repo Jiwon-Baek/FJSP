@@ -6,8 +6,6 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 from config import *
-
-
 # region Source
 class Source(object):
     def __init__(self, _env, _name, _model, _monitor, job_type, IAT='exponential(1)', num_parts=float('inf')):
@@ -95,7 +93,7 @@ if __name__ == "__main__":
     from Sink import Sink
     from Resource import Machine
     sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
-    import quay
+    from test_quay.test_quay import quay
 
     env = simpy.Environment()
     monitor = Monitor(filepath)
@@ -114,7 +112,7 @@ if __name__ == "__main__":
     NUM_JOB = len(quay.job_list)
     for i, j in enumerate(quay.job_list[:4]):
         model['Source' + str(i+1)] = Source(env, 'J-' + str(i+1), model, monitor,
-                                      job_type=quay.job_list[i], IAT=IAT, num_parts=float('inf'))
+                                            job_type=quay.job_list[i], IAT=IAT, num_parts=float('inf'))
 
 
     model['Sink'] = Sink(env, monitor)

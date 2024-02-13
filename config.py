@@ -16,6 +16,7 @@ CONSOLE_MODE = True
 # Visualization Variables
 TITLE = "Quay Simulation"
 
+
 current_working_directory = os.getcwd()
 # Directory Configuration
 script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the directory of the current script

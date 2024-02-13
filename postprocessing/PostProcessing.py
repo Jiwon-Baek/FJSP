@@ -34,5 +34,5 @@ def read_machine_log(_filepath):
     data = pd.DataFrame(data)
     data = data.sort_values(by=['Start'])
     data.reset_index(drop=True, inplace=True)
-    data.to_csv('./result/' + filename + '_machine_log.csv')
+    data.to_csv(_filepath.split('.')[0]+'_machine_log.csv')
     return data

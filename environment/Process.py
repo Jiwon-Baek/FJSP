@@ -6,7 +6,16 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(
 
 from environment.Monitor import *
 from config import *
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 
+NUM_JOB = None
+NUM_MACHINE = None
+def set_NUM_JOB(value):
+    global NUM_JOB
+    NUM_JOB = value
+def set_NUM_MACHINE(value):
+    global NUM_MACHINE
+    NUM_MACHINE = value
 
 class Process(object):
     def __init__(self, _env, _name, _model, _monitor):
@@ -19,6 +28,8 @@ class Process(object):
         self.in_buffer = simpy.FilterStore(_env, capacity=float('inf'))
         self.work_queue = simpy.FilterStore(_env, capacity=float('inf'))
         self.out_buffer = simpy.FilterStore(_env, capacity=float('inf'))
+        global NUM_JOB
+        self.work_waiting = [self.env.event() for i in range(NUM_JOB)]
 
         # get run functions in class
         _env.process(self.run())
@@ -55,6 +66,10 @@ class Process(object):
 
         # 2. check the machines(resources) that are suitable for the process.
         machine, pt = self.routing(operation)
+
+        """ This is where the scheduler enables the work to be processed. """
+        # yield self.work_waiting[part.id]
+
         yield machine.availability.put('using')
         machine.status = 'Working'
         machine.turn_idle = self.env.now + pt
@@ -156,7 +171,7 @@ class Process(object):
 
 if __name__ == "__main__":
     from Source import *
-    from quay import *
+    from test_quay.test_quay import *
     from Sink import *
     from Resource import Machine
     from postprocessing.PostProcessing import read_machine_log
