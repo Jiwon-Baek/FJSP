@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
 
 
-    NUM_MACHINE = len(quay.quay_list)
+    NUM_MACHINE = len(data_quay.quay_list)
     for i, q in enumerate(quay.quay_list):
         model[q] = Machine(env, i,q)
 
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     NUM_JOB = len(quay.job_list)
     for i, j in enumerate(quay.job_list[:4]):
         model['Source' + str(i+1)] = Source(env, 'J-' + str(i+1), model, monitor,
-                                            job_type=quay.job_list[i], IAT=IAT, num_parts=float('inf'))
+                                            job_type=data_quay.job_list[i], IAT=IAT, num_parts=float('inf'))
 
 
     model['Sink'] = Sink(env, monitor)

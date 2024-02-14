@@ -17,7 +17,7 @@ as the module where this import statement is written.
 
 2. from Monitor 
 -> This is absolute import. This assumes that there is a top-level module or package named Monitor
-in your Python path. It's not relative to the current package. The 'config.py' file and the 'quay.py' file is
+in your Python path. It's not relative to the current package. The 'config.py' file and the 'data_quay.py' file is
 at the outer scope of this 'environment' directory, so the absolute import method was used. 
 
 Note 2: You need to add import statement repeatedly inside the each python file respectively.

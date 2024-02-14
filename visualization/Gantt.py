@@ -19,6 +19,15 @@ simmode = ''
 def Gantt(result, num, printmode = True, writemode = False):
 
     df = result.iloc[0:num].copy()
+
+    # 10 machine, converting 1~10 machine indices to 0~9
+    plot_order = {}
+    for i in range(10):
+        plot_order['M'+str(i+1)]=i
+    df['plot_order'] = df['Machine'].map(plot_order)
+    df = df.sort_values(by='plot_order')
+
+
     c_dict = dict()
     job_list = df['Job'].unique()
 
@@ -35,7 +44,9 @@ def Gantt(result, num, printmode = True, writemode = False):
         else:
             hex_color = '#' + hex_color
         # Quay 데이터에서는 J-0부터가 아니라 J-1부터 시작하고 있음
-        c_dict['J-' + str(i+1)] = hex_color
+        # c_dict['J-' + str(i+1)] = hex_color
+        #abz5 Data
+        c_dict['J' + str(i+1)] = hex_color
 
     df['color'] = df['Job'].apply(lambda j : c_dict[j.split('_')[0]])
 
