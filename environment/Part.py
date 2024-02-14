@@ -14,10 +14,14 @@ class Operation(object):
         self.process_time = process_time  # Integer, or given as List
         self.part_name = part_name  # Inherited
         self.name = part_name + '_Op' + str(id)
+        self.machine_list = machine_list  # list of strings
 
         # In the simplest Job Shop problem, process type is often coincide with the machine type itself.
-        self.machine_list = machine_list  # list of strings
-        self.machine_available = [self.model[machine_list[i]] for i in range(len(machine_list))]
+        if isinstance(machine_list, list):
+            self.machine_available = [self.model[machine_list[i]] for i in range(len(machine_list))]
+        else:
+            self.machine_available = [self.model[machine_list]]
+
 
         self.machine_determined = None
         self.machine_determined_idx = None

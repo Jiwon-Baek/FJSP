@@ -12,7 +12,6 @@ Source              Source
 Sink                Sink
 Monitor             Monitor
 
-Based on 'JSSP_6Factors_nobuffer_231113.py' file
 Revised in 2023. 11. 15.
 """
 import sys
@@ -28,25 +27,24 @@ from postprocessing.PostProcessing import *
 from visualization.Gantt import *
 from visualization.GUI import GUI
 import simpy
-import data_quay
+import data
 
 env = simpy.Environment()
 
 monitor = Monitor(filepath)
 model = dict()
 
-set_NUM_JOB(len(data_quay.job_list))
-set_NUM_MACHINE(len(data_quay.quay_list))
-for i, q in enumerate(data_quay.quay_list):
+set_NUM_JOB(10)
+set_NUM_MACHINE(10)
+for i, q in enumerate(data.abz5_machine_list):
     model[q] = Machine(env, i, q)
-
-for j, p in enumerate(data_quay.work_list):
+for j, p in enumerate(data.abz5_process_list):
     model[p] = Process(env, p, model, monitor)
 
 # for i, j in enumerate(quay.job_list[:9]):
-for i, j in enumerate(data_quay.job_list[:10]):
+for i, j in enumerate(data.abz5_process):
     model['Source' + str(i + 1)] = Source(env, 'J' + str(i + 1), model, monitor,
-                                          job_type=data_quay.job_list[i], IAT=IAT, num_parts=1)
+                                          job_type=data.job_list[i], IAT=IAT, num_parts=1)
 
 model['Sink'] = Sink(env, monitor)
 

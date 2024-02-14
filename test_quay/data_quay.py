@@ -22,7 +22,7 @@ import pandas as pd
 import os
 
 # Read the Excel file
-file_path = 'N:\개인\snu ensite\Projects\JSSP_V3\quay.xlsx'
+file_path = '.\quay.xlsx'
 df_ship = pd.read_excel(file_path, sheet_name='ship', header=0, index_col=None)
 df_quay = pd.read_excel(file_path, sheet_name='quay', header=0, index_col=None)
 
@@ -153,7 +153,8 @@ class JobType:
 
 
 def generate_jobtype(idx):
-    jobname = ship_list[idx-1]
+    # jobname = ship_list[idx-1]
+    jobname = 'J'+str(idx)
     processes = [ship_operations[jobname][i][1] for i in range(len(ship_operations[jobname]))]
 
     machines = ship_quay[jobname]
