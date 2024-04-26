@@ -3,5 +3,7 @@ __pycache__/
 environment.__pycache__/
 postprocessing.__pycache__/
 visualization.__pycache__/
+test_abz5/__pycache__/
+test_quay/__pycache__/
 *.pyc
 .idea/

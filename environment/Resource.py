@@ -1,5 +1,4 @@
 import simpy
-from config import CONSOLE_MODE
 
 class Machine(object):
     def __init__(self, env, id,name):

@@ -1,7 +1,5 @@
 import pandas as pd
 from collections import OrderedDict, defaultdict
-from config import *
-NUM_MACHINE = 28
 
 # TODO : read_machine_log로 이름 변경
 def read_machine_log(_filepath):

@@ -5,11 +5,12 @@ from environment.Monitor import Monitor
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
-from config import *
+
 # region Source
 class Source(object):
-    def __init__(self, _env, _name, _model, _monitor, job_type, IAT='exponential(1)', num_parts=float('inf')):
+    def __init__(self, _cfg, _env, _name, _model, _monitor, job_type, IAT='exponential(1)', num_parts=float('inf')):
         self.env = _env
+        self.cfg = _cfg
         self.name = _name  # 해당 Source의 이름
         self.model = _model
         self.monitor = _monitor
@@ -41,7 +42,7 @@ class Source(object):
                                     event="Part" + str(self.name[-1]) + " Created")
 
                 # 4. Print through Console (Optional)
-                if CONSOLE_MODE:
+                if self.cfg.CONSOLE_MODE:
                     print('-' * 15 + part.name + " Created" + '-' * 15)
                 # 5. Proceed on IAT timeout
                 # ! Handling an IAT value given as a string variable
@@ -69,12 +70,11 @@ class Source(object):
             # 3. Put the part into the in_part queue of the next process
             # This 'yield' enables handling Process of limited queue,
             # by pending the 'put' call until the process is available for a new part
-            if CONSOLE_MODE:
+
+            if self.cfg.CONSOLE_MODE:
                 print(part.name, "is going to be put in ", next_process.name)
             yield next_process.in_buffer.put(part)
             part.loc = next_process.name
-            # next_process.input_event.succeed()  # Enables detection of incoming part
-            # next_process.input_event = simpy.Event(self.env)
 
             # 4. Record
             self.monitor.record(self.env.now, self.name, machine=None,
@@ -85,38 +85,3 @@ class Source(object):
 
 
 # endregion
-
-
-if __name__ == "__main__":
-    import sys
-    from Process import *
-    from Sink import Sink
-    from Resource import Machine
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
-    from test_quay.test_quay import quay
-
-    env = simpy.Environment()
-    monitor = Monitor(filepath)
-    model = dict()
-
-
-
-    NUM_MACHINE = len(data_quay.quay_list)
-    for i, q in enumerate(quay.quay_list):
-        model[q] = Machine(env, i,q)
-
-    for j, p in enumerate(quay.process_list):
-        model[p] = Process(env, p, model, monitor, _machine_order=None,
-                                        capacity=1, in_buffer=12, out_buffer=12)
-
-    NUM_JOB = len(quay.job_list)
-    for i, j in enumerate(quay.job_list[:4]):
-        model['Source' + str(i+1)] = Source(env, 'J-' + str(i+1), model, monitor,
-                                            job_type=data_quay.job_list[i], IAT=IAT, num_parts=float('inf'))
-
-
-    model['Sink'] = Sink(env, monitor)
-
-
-    env.run(SIMUL_TIME)
-    monitor.save_event()

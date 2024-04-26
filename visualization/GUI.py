@@ -4,7 +4,6 @@ from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 import random
 import simpy
-from config import *
 import pandas as pd
 # import plotly.express as px
 # import plotly.graph_objects as go
@@ -34,19 +33,20 @@ class GUI():
 
 
 class GUI_Update():
-    def __init__(self, machine_log):
+    def __init__(self, cfg, machine_log):
         self.RANDOM_SEED = 42
+        self.cfg = cfg
         self.tk = Tk()
         self.tk.title("Job Shop Scheduler - Jiwon Baek")
         self.tk.geometry("1680x720+400+200")
         self.tk.resizable(False, False)
-        self.image_bytes = [1 for i in range(n_show)]
-        self.image = [1 for i in range(n_show)]
-        self.tk_images = [1 for i in range(n_show)]
+        self.image_bytes = [1 for i in range(cfg.n_show)]
+        self.image = [1 for i in range(cfg.n_show)]
+        self.tk_images = [1 for i in range(cfg.n_show)]
         self.current_image = 1
 
-        for i in range(1,n_show):
-            self.image_bytes[i] = Gantt(machine_log, i)
+        for i in range(1,cfg.n_show):
+            self.image_bytes[i] = Gantt(cfg, machine_log, i)
             self.image[i] = Image.open(io.BytesIO(self.image_bytes[i])) # 0으로 초기화하긴 했지만 byte가 들어올거라 괜찮음
             self.tk_images[i] = ImageTk.PhotoImage(self.image[i])
 
@@ -59,12 +59,11 @@ class GUI_Update():
         self.tk.mainloop()
 
     def update(self):
-
-        total_images = n_op # slide show처럼 돌릴 이미지 개수
+        num_operation = self.cfg.num_job * self.cfg.num_machine
 
         self.gantt.config(image=self.tk_images[self.current_image])
 
-        if self.current_image < n_op:
+        if self.current_image < num_operation:
             self.current_image += 1
         # self.current_image = (self.current_image + 1) % total_images  # Cycle through images
 
@@ -73,7 +72,7 @@ class GUI_Update():
         # while self.current_image<n_show:
 
         if self.current_image == 1:
-            self.tk.after(show_interval_time, self.update)  # Pause for 2000 milliseconds (2 seconds)
+            self.tk.after(self.cfg.show_interval_time, self.update)  # Pause for 2000 milliseconds (2 seconds)
         else:
-            self.tk.after(finished_pause_time, self.update)  # Pause for 2000 milliseconds (2 seconds)
+            self.tk.after(self.cfg.finished_pause_time, self.update)  # Pause for 2000 milliseconds (2 seconds)
 

@@ -1,5 +1,5 @@
 import pandas as pd
-from config import CONSOLE_MODE
+# from config import CONSOLE_MODE
 
 # region Monitor
 class Monitor(object):
@@ -38,20 +38,19 @@ def monitor_console(time, part, object='Entire Process', command=''):
     console_mode : boolean
     object : 'single part' for default
     """
-    if CONSOLE_MODE:
-        operation = part.op[part.step]
-        command = " "+command+" "
-        if object == 'Single Part':
+    operation = part.op[part.step]
+    command = " "+command+" "
+    if object == 'Single Part':
+        print(str(time), '\t', operation.name, command,end='')
+        print(operation.machine)
+    elif object == 'Single Job':
+        if operation.part_name == 'Part0_0':
             print(str(time), '\t', operation.name, command,end='')
-            print(operation.machine)
-        elif object == 'Single Job':
-            if operation.part_name == 'Part0_0':
-                print(str(time), '\t', operation.name, command,end='')
-            print(operation.machine)
-        elif object == 'Entire Process':
-            print(str(time), '\t', operation.name, command, operation.machine_determined.name)
-        elif object == 'Machine':
-            print_by_machine(time, part)
+        print(operation.machine)
+    elif object == 'Entire Process':
+        print(str(time), '\t', operation.name, command, operation.machine_determined.name)
+    elif object == 'Machine':
+        print_by_machine(time, part)
 
 
 def print_by_machine(env, part):

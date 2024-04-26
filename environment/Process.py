@@ -5,31 +5,23 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 
 from environment.Monitor import *
-from config import *
+# from config import *
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 
-NUM_JOB = None
-NUM_MACHINE = None
-def set_NUM_JOB(value):
-    global NUM_JOB
-    NUM_JOB = value
-def set_NUM_MACHINE(value):
-    global NUM_MACHINE
-    NUM_MACHINE = value
-
 class Process(object):
-    def __init__(self, _env, _name, _model, _monitor):
+    def __init__(self, _cfg, _env, _name, _model, _monitor):
         # input data
         self.env = _env
         self.name = _name  # 해당 프로세스의 이름
         self.model = _model
         self.monitor = _monitor
+        self.cfg = _cfg
 
         self.in_buffer = simpy.FilterStore(_env, capacity=float('inf'))
         self.work_queue = simpy.FilterStore(_env, capacity=float('inf'))
         self.out_buffer = simpy.FilterStore(_env, capacity=float('inf'))
-        global NUM_JOB
-        self.work_waiting = [self.env.event() for i in range(NUM_JOB)]
+
+        self.work_waiting = [self.env.event() for i in range(self.cfg.num_job)]
 
         # get run functions in class
         _env.process(self.run())
@@ -77,12 +69,14 @@ class Process(object):
         # 3. Proceed & Record through console
         self.monitor.record(self.env.now, self.name, machine=machine.name,
                             part_name=part.name, event="Started")
-        monitor_console(self.env.now, part, OBJECT, "Started on")
+        if self.cfg.CONSOLE_MODE :
+            monitor_console(self.env.now, part, self.cfg.OBJECT, "Started on")
 
         yield self.env.timeout(pt)
         self.monitor.record(self.env.now, self.name, machine=machine.name,
                             part_name=part.name, event="Finished")
-        monitor_console(self.env.now, part, OBJECT, "Finished on")
+        if self.cfg.CONSOLE_MODE :
+            monitor_console(self.env.now, part, self.cfg.OBJECT, "Finished on")
 
         machine.util_time += pt
 
@@ -93,6 +87,30 @@ class Process(object):
 
     def dispatching(self):
         """ 다음으로 진행할 작업을 결정하는 부분을 분리함 """
+
+        """
+        만약 이 부분에서 agent가 distributor 를 calling 한다면
+        1. 일단 input event를 감지하기 위한 simpy.env.Event()가 필요
+        2. input event가 감지되면, calling event 발생 
+        3. scheduler는 calling을 감지하고 여러가지 index 중 하나를 반환 
+        3-2. 이때 아예 아무것도 반환하지 않기를 선택할 수도 있음. 그러면 scheduler는 계속 다음 calling event 받도록 하고
+             여기에서 yield를 걸어서 다음 input event가 발생할 때까지 기다려야 함.
+             => self.dispatching()을 env.process()에 넣을 게 아닌 것 같은데?
+
+        4. 그리고 지금은 input event 기준이라서 실제 process의 idle함과는 관련이 없음
+            시간을 계속해서 tracking 해가면서 끝나자마자 다른 job 넣고, ... 이런게 불가능함
+            지금은 job이 들어오자 마자 이걸 지금 당장 할건지 말건지 아니면 당장 아무것도 안하고 기다릴지를 결정하는 구조임
+            => machine이 idle해지는 시점에 KPI를 구해서 그걸 scheduling에 활용하는 게 불가능함
+        5. 결론) dispatching()을 뭔가 while true가 아니라 machine이 idle해지는 순간마다 발동하도록 연계해야 할 것 같음
+        
+        근데 그렇게 했을 때 문제) 만약에 Process1과 Process2에서 모두 쓸 수 있는 machine이 idle해진 상황에,
+        두개의 calling event가 발생해 버리면 각 Process 입장에서는 이걸 모르고 각자 dispatching할 작업을 선택할텐데?
+        
+        그리고 사실상 machine을 골라주는 건 work()에서 할 예정이었는데, 여기서 지금 machine이 idle해지자마자 job을 보내면 
+        (사실상 선택지가 없는 상황에서 job을 보내면) machine은 선택할 필요가 없이 자동으로 지정되는 것과 같음
+        
+        """
+
         while True:
             # print(self.name,'\t','Waiting for next arrival')
             # print(self.name,'\t','A new part arrived')
@@ -100,6 +118,8 @@ class Process(object):
             # print(self.name,'\t','grabbed a part from in_buffer')
             yield self.work_queue.put(part_ready)
             # print(self.name,'\t','put a part to work_queue')
+
+
 
 
     def routing(self, operation):
@@ -116,7 +136,8 @@ class Process(object):
             # TODO : 모든 machine이 idle하지 않은 경우에 대응할 수 있어야 함 -> 완료
 
             # Check if there are better options
-            # Remark : 그런데 학습 방법에 따라서 현재 대기시간이 많이 남은 machine이더라도 그게 suitable하다고 판단되면 선택할 수 있어야 하지 않나?
+            # Remark : 그런데 학습에 따라서 현재 대기시간이 많이 남은 machine이더라도 그게 좋다고 판단되면 선택할 수 있어야 하지 않나?
+            # TODO : 현재는 고의로 idle하게 machine을 남겨두는 것이 불가능함 -> 수정 필요
 
             remaining_time = []
             for m in machine_list:
@@ -140,7 +161,8 @@ class Process(object):
             else:
                 process_time = operation.process_time
 
-        else:  # if the compatible machine is determined and not given as list
+        else:
+            # if the compatible machine is determined and not given as list
             # use operation.machine to specify the name of the machine (e.g. 'M1')
             """
             In the simple JSSP problem, it is assumed that the machine is sorely designated
@@ -168,42 +190,3 @@ class Process(object):
             else:
                 self.model['Sink'].put(part)
 
-
-if __name__ == "__main__":
-    from Source import *
-    from test_quay.test_quay import *
-    from Sink import *
-    from Resource import Machine
-    from postprocessing.PostProcessing import read_machine_log
-    from visualization.GUI import *
-    from visualization.Gantt import *
-
-    env = simpy.Environment()
-    monitor = Monitor(filepath)
-    NUM_JOB = 3
-    model = {}
-    jobtype1 = JobType('J-1', ['P1', 'P2', 'P3'],
-                      [['M1'], ['M1', 'M3'], ['M2', 'M3']],
-                      [10, 15, 10])
-    jobtype2 = JobType('J-2', ['P1', 'P2', 'P3'],
-                      [['M2'], ['M1', 'M3'], ['M2', 'M3']],
-                      [8, [3,2], [5,6]])
-    jobtype3 = JobType('J-3', ['P1', 'P2', 'P3'],
-                      [['M1','M2'], ['M1', 'M3'], ['M2', 'M3']],
-                      [10, [3,2], 8])
-    model['Source1'] = Source(env, 'J1', model, monitor, job_type=jobtype1, IAT=IAT, num_parts=float('inf'))
-    model['Source2'] = Source(env, 'J2', model, monitor, job_type=jobtype2, IAT=IAT, num_parts=float('inf'))
-    model['Source3'] = Source(env, 'J3', model, monitor, job_type=jobtype3, IAT=IAT, num_parts=float('inf'))
-
-    for j, p in enumerate(['P1', 'P2', 'P3']):
-        model[p] = Process(env, p, model, monitor)
-
-    for i, q in enumerate(['M1', 'M2', 'M3']):
-        model[q] = Machine(env, i, q)
-
-    model['Sink'] = Sink(env, monitor)
-    env.run(50)
-    monitor.save_event()
-    machine_log = read_machine_log(filepath)
-    gantt = Gantt(machine_log, len(machine_log), printmode=True, writemode=True)
-    gui = GUI(gantt)

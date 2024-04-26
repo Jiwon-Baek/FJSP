@@ -4,7 +4,6 @@ python                    3.11.3
 simpy                     4.0.1
 """
 
-from config import *
 import pandas as pd
 from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
@@ -12,25 +11,24 @@ import numpy as np
 # If you also want to get the image bytes as a variable, you can use BytesIO
 from io import BytesIO
 import random
+
 simmode = ''
+
 
 # create a column with the color for each department
 
-def Gantt(result, num, printmode = True, writemode = False):
-
+def Gantt(cfg, result, num, printmode=True, writemode=False):
     df = result.iloc[0:num].copy()
 
     # 10 machine, converting 1~10 machine indices to 0~9
     plot_order = {}
     for i in range(10):
-        plot_order['M'+str(i+1)]=i
+        plot_order['M' + str(i + 1)] = i
     df['plot_order'] = df['Machine'].map(plot_order)
     df = df.sort_values(by='plot_order')
 
-
     c_dict = dict()
     job_list = df['Job'].unique()
-
 
     """Generating Color Hex Codes for Plotting"""
     for i in range(len(job_list)):
@@ -45,23 +43,23 @@ def Gantt(result, num, printmode = True, writemode = False):
             hex_color = '#' + hex_color
         # Quay 데이터에서는 J-0부터가 아니라 J-1부터 시작하고 있음
         # c_dict['J-' + str(i+1)] = hex_color
-        #abz5 Data
-        c_dict['J' + str(i+1)] = hex_color
+        # abz5 Data
+        c_dict['J' + str(i + 1)] = hex_color
 
-    df['color'] = df['Job'].apply(lambda j : c_dict[j.split('_')[0]])
+    df['color'] = df['Job'].apply(lambda j: c_dict[j.split('_')[0]])
 
     machine_list = df['Machine'].unique()
 
-    fig, ax = plt.subplots(1, figsize=(16*0.8, 9*0.8))
+    fig, ax = plt.subplots(1, figsize=(16 * 0.8, 9 * 0.8))
     ax.barh(df.Machine, df.Delta, left=df.Start, color=df.color, edgecolor='black')
     ##### LEGENDS #####
 
     legend_elements = [Patch(facecolor=c_dict[i], label=i) for i in c_dict]
     plt.legend(handles=legend_elements)
-    plt.ylabel("Quay List")
-    plt.xlabel("Time")
+    plt.ylabel(cfg.ylabel)
+    plt.xlabel(cfg.xlabel)
     # plt.title(TITLE, size=24)
-    plt.title(TITLE)
+    plt.title(cfg.TITLE)
 
     ##### TICKS #####
     if printmode:
@@ -69,7 +67,7 @@ def Gantt(result, num, printmode = True, writemode = False):
 
     # Save the figure as an image file
     if writemode:
-        fig.savefig(save_path + '/' + filename + '.png', format='png')
+        fig.savefig(cfg.save_path + '/' + cfg.filename + '.png', format='png')
 
     # Create a BytesIO object
     image_bytes_io = BytesIO()
@@ -81,4 +79,3 @@ def Gantt(result, num, printmode = True, writemode = False):
     image_bytes = image_bytes_io.getvalue()
 
     return image_bytes
-
