@@ -46,6 +46,14 @@ class Process(object):
             """
             # print(self.name,'\t','Waiting for part to arrive in work_queue...')
             part = yield self.work_queue.get()
+            # TODO : Agent 호출
+
+            """
+            Remark : routing은 자체 결정하게 따로 냅둬도 괜찮을 것 같다. 
+            (tuple 형태로 둘다 agent가 전달하는 게 아니라)
+            => multi agent로의 확장이 가능해진다
+            
+            """
             # print(self.name,'\t',part.name,'\t','Grabbed the part from the working queue')
             self.env.process(self.work(part))
             # print(self.name,'\t',part.name,'\t','work(part) executed!')
@@ -101,23 +109,44 @@ class Process(object):
             시간을 계속해서 tracking 해가면서 끝나자마자 다른 job 넣고, ... 이런게 불가능함
             지금은 job이 들어오자 마자 이걸 지금 당장 할건지 말건지 아니면 당장 아무것도 안하고 기다릴지를 결정하는 구조임
             => machine이 idle해지는 시점에 KPI를 구해서 그걸 scheduling에 활용하는 게 불가능함
-        5. 결론) dispatching()을 뭔가 while true가 아니라 machine이 idle해지는 순간마다 발동하도록 연계해야 할 것 같음
+        5. 결론) work()을 뭔가 while true가 아니라 machine이 idle해지는 순간마다 발동하도록 연계해야 할 것 같음
         
         근데 그렇게 했을 때 문제) 만약에 Process1과 Process2에서 모두 쓸 수 있는 machine이 idle해진 상황에,
         두개의 calling event가 발생해 버리면 각 Process 입장에서는 이걸 모르고 각자 dispatching할 작업을 선택할텐데?
         
+        """
+        # fixme : 가용 가능한 machine이 없으면 애초에 work()를 발생시키지 않는 쪽으로 제어
+
+        """
         그리고 사실상 machine을 골라주는 건 work()에서 할 예정이었는데, 여기서 지금 machine이 idle해지자마자 job을 보내면 
         (사실상 별다른 선택지가 없는 상황에서 job을 보내면) machine은 선택할 필요가 없이 자동으로 지정되는 것과 같음
 
-        Machine이 idle해질 때마다 가능한 모든 process와 그에 속한 queue에 대기중인 job들을 보고 고르게 하기 -> 가능성 있음
+        => (해결책) 일단 machine buffer에 넣어놓고 나중에 machine이 결정하도록 해도 된다.
+        (안벽문제의 경우 하루 delay되는 비용이 커서 machine 선택에 자유도를 부여하지 않고 그냥 일단 들어가게끔 했음.)
+        
+        Machine이 idle해질 때마다, 가능한 모든 process와 그에 속한 queue에 대기중인 job들을 보고 고르게 하기 -> 가능성 있음
         그렇다면 현재의 dispatching - work로 이원화해놓은 부분이 불필요해짐.
+        
+        => (해결책2) env._queue 에서 특정 시점에 실행되는 모든 event를 list로 관리할 수 있게끔 해놨음
+        ====> 같은 시점에 일어나는 여러 일들을 다 env.step()으로 실행시키고 나서 의사결정을 하면 됨
+        
         => Process_v2 파일로 구현할 예정
         """
 
         while True:
             # print(self.name,'\t','Waiting for next arrival')
             # print(self.name,'\t','A new part arrived')
+
+            # 갈 곳이 있는 part 대상으로만 딱히 하지 않아도 알아서 나중에 학습하게 됨
+            # TODO : call agent for selecting a part
+
             part_ready = yield self.in_buffer.get()
+
+            # TODO : call agent for selecting a machine
+            # 아니면 휴리스틱으로 결정해 주던가
+
+            # execute work()
+
             # print(self.name,'\t','grabbed a part from in_buffer')
             yield self.work_queue.put(part_ready)
             # print(self.name,'\t','put a part to work_queue')
