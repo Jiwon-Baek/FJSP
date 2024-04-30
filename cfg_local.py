@@ -20,7 +20,7 @@ class Configure:
 
         # Monitor Variables
         self.OBJECT = 'Entire Process'
-        self.CONSOLE_MODE = True
+        self.CONSOLE_MODE = False
 
         # Visualization Variables
         self.TITLE = "Quay Simulation"

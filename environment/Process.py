@@ -48,6 +48,7 @@ class Process(object):
         #  이만큼의 operation이 대기중이라는 사실을 기록해서 다른 class에서도 참조하도록 해야 하지 않을까?
         machine.status = 'Working'
         machine.turn_idle = self.env.now + pt
+        machine.queue.remove(operation)
 
         # 3. Proceed & Record through console
         self.monitor.record(self.env.now, self.name, machine=machine.name,
@@ -101,7 +102,6 @@ class Process(object):
         while True:
             ############### 1. Job의 결정
             # TODO : call agent for selecting a part
-
             part = yield self.in_buffer.get()
 
             ############### 2. Machine의 결정
@@ -109,8 +109,17 @@ class Process(object):
             operation = part.op[part.step]
             if isinstance(operation.machine_available, list):  # 만약 여러 machine에서 작업 가능한 operation이라면
                 machine, pt = self.heuristic_FJSP(operation)
+
             else:  # 만약 단일 기계에서만 작업 가능한 operation이라면
                 machine, pt = self.heuristic_JSSP(operation)
+
+            # 결정된 사항을 기록해 둠
+            operation.machine_determined = machine
+            operation.process_time_determined = pt
+            machine.queue.append(operation)
+
+            # print('%d \t%s have %d operations in queue... turning idle at %d... \tfinish working at %d' %
+            #       (self.env.now, machine.name, len(machine.queue), machine.turn_idle, machine.expected_turn_idle()))
 
             ############### 3. work() 인스턴스 생성
             self.env.process(self.work(part, machine, pt))
@@ -128,7 +137,8 @@ class Process(object):
             if m.status == 'Idle':
                 remaining_time.append(0)
             else:
-                remaining_time.append(m.turn_idle - self.env.now)
+                remaining_time.append(m.expected_turn_idle() - self.env.now)
+                # remaining_time.append(m.turn_idle - self.env.now)
         # index of the machine with the least remaining time
         least_remaining = np.argmin(remaining_time)
         # TODO : 만약에 argmin인 값이 둘 이상일 때 (예를 들면 idle한 machine이 둘 이상일 때) 어떤 것을 선택할지 결정해야 함
