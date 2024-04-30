@@ -81,7 +81,7 @@ class Process(object):
 
         2-1. 위의 방법대로 했을 때, idle한 machine이 있다는 것을 근거로 work()를 발생시킨다는 것은
         사실상 machine selection의 자유도를 주지 않는 것과 같은 결과를 낳을 수 있음.
-        (해결책) 일단 machine buffer에 넣어놓고 나중에 machine이 결정하도록 해도 된다. (=>multi-agent)
+        (해결책) 일단 machine buffer에 넣어놓고 나중에 machine이 결정하도록 해도 된다. (=>multi-RL)
         (안벽문제의 경우 하루 delay되는 비용이 커서 machine 선택에 자유도를 부여하지 않고
         그냥 일단 들어가게끔 했음.)
 
@@ -101,11 +101,11 @@ class Process(object):
 
         while True:
             ############### 1. Job의 결정
-            # TODO : call agent for selecting a part
+            # TODO : call RL for selecting a part
             part = yield self.in_buffer.get()
 
             ############### 2. Machine의 결정
-            # TODO : call agent for selecting a machine
+            # TODO : call RL for selecting a machine
             operation = part.op[part.step]
             if isinstance(operation.machine_available, list):  # 만약 여러 machine에서 작업 가능한 operation이라면
                 machine, pt = self.heuristic_FJSP(operation)

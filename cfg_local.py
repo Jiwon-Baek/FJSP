@@ -44,23 +44,21 @@ class Configure:
         self.finished_pause_time = 1000
 
 
-        # self.n_episode = 500
-        # self.eval_every = 100
-        # self.save_every = 1000
-        # self.num_job = n_job # 100
-        # self.num_machine = n_machine # 5
-        # self.weight_tard = 0.5
-        # self.weight_setup = 0.5
-        #
-        # self.lr = 1e-4
-        # self.gamma = 0.899
-        # self.lmbda = 0.886
-        # self.eps_clip = 0.2
-        # self.K_epoch = 1
-        # self.T_horizon = 1
-        # self.optim = "Adam"
-        #
-        # self.num_steps = 32
-        # self.V_coef = 0.113
-        # self.E_coef = 0.025
-        # self.n_units = 64
+        self.n_episode = 500
+        self.eval_every = 100
+        self.save_every = 1000
+        self.weight_tard = 0.5
+        self.weight_setup = 0.5
+
+        self.lr = 1e-4
+        self.gamma = 0.899
+        self.lmbda = 0.886
+        self.eps_clip = 0.2
+        self.K_epoch = 1
+        self.T_horizon = 1
+        self.optim = "Adam"
+
+        self.num_steps = 32
+        self.V_coef = 0.113
+        self.E_coef = 0.025
+        self.n_units = 64
