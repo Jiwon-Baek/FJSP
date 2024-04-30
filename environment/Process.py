@@ -107,8 +107,11 @@ class Process(object):
         두개의 calling event가 발생해 버리면 각 Process 입장에서는 이걸 모르고 각자 dispatching할 작업을 선택할텐데?
         
         그리고 사실상 machine을 골라주는 건 work()에서 할 예정이었는데, 여기서 지금 machine이 idle해지자마자 job을 보내면 
-        (사실상 선택지가 없는 상황에서 job을 보내면) machine은 선택할 필요가 없이 자동으로 지정되는 것과 같음
-        
+        (사실상 별다른 선택지가 없는 상황에서 job을 보내면) machine은 선택할 필요가 없이 자동으로 지정되는 것과 같음
+
+        Machine이 idle해질 때마다 가능한 모든 process와 그에 속한 queue에 대기중인 job들을 보고 고르게 하기 -> 가능성 있음
+        그렇다면 현재의 dispatching - work로 이원화해놓은 부분이 불필요해짐.
+        => Process_v2 파일로 구현할 예정
         """
 
         while True:
