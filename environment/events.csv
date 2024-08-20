@@ -1,0 +1,4 @@
+,Time,Event,Part,Process,Machine
+0,10:00,Begin Operation,Part0_0,Start,Drill Press
+1,10:30,Mid Operation,Part0_0,Check,Drill Press
+2,11:00,End Operation,Part0_0,End,Drill Press
